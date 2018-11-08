@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+</head>
+<body>
+	<script>
+	/*
+	 * 这个解决方案的思路贴切现实中的自然原理.
+	 * 每个response 回调自己的 callback 函数，先判断response有没有返回并存入到temp[]数组中，并且上一个元素是否已经打印
+	 * 如果满足上述两个条件就打印，如果不满足，就延时执行
+	 * 这个解决方案非常稳定，但是需要修改服务端的API，增加返回值n
+	 * 相对于方案5，这个解决方案稳定性有了质的提升，当n=5000时依然不会停止响应，这个解决方案做了如下修改：
+	 * (1)将xss_rpc_call定义的全局函数callbakname由n个变为1个，减少了全局变量；
+	 * (2)在函数xss_rpc_call,rpc,cb,judge, handler, timeout中的i改使用传入参数,在调用callback时传递
+	 */
+	function xss_ajax(url){
+		var script_el = document.createElement('script');
+		var script_node = null;
+
+		script_el.setAttribute('src',url);
+		script_el.setAttribute('type','text/javascript');
+		script_el.setAttribute('id','script_el');
+
+		script_node = document.getElementById('script_el');
+
+		if (script_node) {
+			document.getElementsByTagName('head')[0].removeChild(script_node);
+		}
+
+		document.getElementsByTagName('head')[0].appendChild(script_el);
+	}
+
+	function xss_rpc_call(w, callback, n){
+		/*var callbakname = 'callback' + Math.round( Math.random() * 100 );*/
+		var callbakname = 'callback';
+		var url = 'http://127.0.0.1/exchange.php?n=' + n + '&callback=' + callbakname;
+
+		xss_ajax(url);
+
+		w[callbakname] = function(msg,n){
+			callback && callback(msg,n);
+		};
+	}
+
+	var total = 1000;
+
+	for (var i = 0; i < total; i++) {
+		(function(i){
+			var temp = new Array(total);
+
+			function rpc(judge, handler, limit, timeout,i){
+				var t = 0
+					,c
+					,stoper = function(){
+						clearTimeout(c);
+					}
+					,runner = function(){
+						if (judge(i)) {
+							handler(i);
+							stoper(i);
+						}else if(t>limit) {
+							timeout(i);
+							stoper(i);
+						}
+						 else{
+							c = setTimeout( runner, Math.round( Math.random() * 100 ) );
+							++t;
+						};
+					}
+
+				runner();
+			}
+
+			var cb = function(result,i){
+				temp[i] = result;
+
+				if (i==0) {
+					console.log(i + ':' + result);
+					temp[i] = "done";
+				} else{
+					rpc(
+						function(i){
+							if (temp[i] && temp[i-1] == "done") {
+								return true;
+							} else {
+								return false;
+							}
+						}
+
+						,function(i){
+							console.log(i + ':' + result);
+							temp[i] = "done";
+						}
+
+						,100
+
+						,function(i){
+							console.log('time is out ...');
+							temp[i] = "done";
+						}
+
+						,i
+					);
+				};
+			}
+
+			xss_rpc_call(window, cb, i);
+		}(i));
+	}
+		
+	</script>
+</body>
+</html>

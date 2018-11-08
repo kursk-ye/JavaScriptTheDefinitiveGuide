@@ -1,0 +1,48 @@
+<!DOCTYPE html>                 <!-- This is an HTML5 file -->
+<html>                          <!-- The root element -->
+	<head>                          <!-- Title, scripts & styles go here -->
+		<title>Digital Clock</title>
+	</head>
+	<body>
+		<script>
+			/*
+			 * 利用object元素的特点，预先下载js文件，但不会执行。
+			 * 然后再等到需要时执行添加<script>元素，src和Object元素的src相同,这样就可以直接使用预先下载的js文件
+			*/
+			function addObjectElement(file_name){
+				var cache = document.createElement('object');
+				cache.date = file_name;
+				cache.id =  'object_cache_id';
+				cache.width = 0;
+				cache.height = 0;
+				document.body.appendChild(cache);
+			}
+			
+			function loadjs(file_name){
+				var script = document.createElement('script');
+				script.setAttribute('src',file_name);
+				script.setAttribute('type','text/javascript');
+				script.setAttribute('id','script_id');
+				
+				var script_ele = document.getElementById('script_id');
+				if (script_ele)
+					document.body.removeChild(script_ele);
+				document.body.appendChild(script);
+					
+			}
+			
+		</script>
+		
+		<button onclick = 'loadjs("./alert.js")' > click me </button>
+		
+		<script>
+			
+			addObjectElement('./alert.js');
+			
+	  </script>
+
+	</body>
+</html>
+
+
+

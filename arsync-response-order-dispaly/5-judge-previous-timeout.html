@@ -1,0 +1,157 @@
+<!DOCTYPE html>                 <!-- This is an HTML5 file -->
+<html>                          <!-- The root element -->
+	<head>                          <!-- Title, scripts & styles go here -->
+		<title>Digital Clock</title>
+	</head>
+	<body>
+
+
+		<script type="text/javascript">
+			function xss_ajax(url, callback)
+			{
+				var script_id = null;
+				var script = document.createElement('script');
+				script.setAttribute('type', 'text/javascript');
+				script.setAttribute('src', url);
+				script.setAttribute('id', 'coolshell_script_id');
+
+				//考虑IE的情况
+				script.onload = script.onreadystatechange = function(){
+					if((!this.readyState || this.readyState === "loading" || this.readyState === "complete")){
+						callback && callback();
+					}
+				};
+
+				script_id = document.getElementById('coolshell_script_id');
+				if(script_id){
+					document.getElementsByTagName('head')[0].removeChild(script_id);
+				}
+
+				// Insert <script> into DOM
+				document.getElementsByTagName('head')[0].appendChild(script);
+			}
+
+
+			function xss_rpc_call(n, callback)
+			{
+				var callbackName="xss_rpc_callback"  + Math.round(Math.random() * 10000); //可能重复
+				var url = "http://127.0.0.1/exchange.php?n="+n+"&callback="+callbackName;
+				xss_ajax(url);
+
+
+				window[callbackName] = function(result){	//全局变量产生性能问题
+					var timeout = Math.round(Math.random() * 5)
+					callback && setTimeout( function(){callback(result);}, timeout );
+					//callback && callback(result) ;
+				}
+			}
+
+			var total = 200;
+			var start, end;
+
+			/*
+			 * 这个解决方案的思路贴切现实中的自然原理.
+			 * 每个response 回调自己的 callback 函数，先判断response有没有返回并存入到temp[]数组中，并且上一个元素是否已经打印
+			 * 如果满足上述两个条件就打印，如果不满足，就延时执行
+			 * 经测试，这个解决方案不稳定，当total超过50时，有可能就不响应
+			 */
+			function timeout_solution()
+			{
+				var temp = new Array(total);
+				// synq {FUN} 用来延迟执行
+				// @delay 被延迟执行的func
+				// @judge 执行delay的判断func
+				// @limit 最大的延时时间毫秒数
+				// @x 用于设置优先级，x越大，timeout越大，执行时间越靠后
+				// @timeout 超时处理func
+
+
+				var synq =  function(handler, judge, limit, x, timeout){
+					var t = 0
+					   ,c
+					   ,stoper = function(){
+					   		clearTimeout( c );
+					   	}
+					   
+					   ,runner = function(){
+					   		if ( judge() ) {
+									
+									handler();
+									stoper();
+													   			
+					   		} else if ( t > limit ) {
+					   			
+					   			timeout();
+					   			stoper();
+					   			
+					   		} else {
+					   			
+					   			c = setTimeout( runner, x) //x越大，延迟执行时间越靠后
+					   			t++;
+					   		}
+					   	}
+					   
+					   runner();
+					};
+				
+				
+				for (var i = 0; i < total; i++) {
+					(function(x){
+						var callback =function(msg){
+							
+							temp[x] = msg;
+							
+							if ( x == 0 ) {
+								console.log( x + ',' + msg);
+								temp[x] = "done";
+							} else {
+								synq(
+									
+									function(){
+										console.log( x + ',' + msg);
+										temp[x] = "done";										
+									}
+									
+								 	,function(){
+								 		if ( temp[x] && temp[x-1] == "done" ) {
+								 			return true;
+								 		} else {
+								 			return false;
+								 		}
+								 	
+								 	}
+								 
+								 	,10 * x
+
+								 	,x
+								 
+								 	,function(){
+										console.log( x + ' is timeouted ....');
+										temp[x] = "done";								 	
+								 	}	
+									
+									);
+								}
+							
+							};
+						
+						xss_rpc_call(x,callback);
+						})(i);
+				}
+				
+			}
+
+
+			start = new Date().getTime();
+
+			timeout_solution();
+
+
+
+		</script>
+
+	</body>
+</html>
+
+
+

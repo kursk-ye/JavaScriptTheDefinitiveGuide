@@ -1,0 +1,41 @@
+<html>
+	<head>
+	</head>
+	<body>
+		<!--
+		先给所有的button 注册事件
+		再判断是哪个button，除btn1外，其他都cancel响应事件
+		 -->
+		<button id="btn1">click me</button>
+		<button id="btn2">click me</button>
+		<button id="btn3">click me</button>
+	</body>
+	<script type="text/javascript" >
+
+		var btns = document.getElementsByTagName('button');
+
+		for (var i=0; i<btns.length; i++)
+			btns[i].addEventListener('click',clickBtn);
+
+
+		function cancelHandler(event) {
+			var event = event || window.event;  // For IE
+			/* Do something to handle the event here */
+			// Now cancel the default action associated with the event
+			if (event.preventDefault) event.preventDefault();  // Standard technique
+			if (event.returnValue) event.returnValue = false;  // IE
+			return false;        // For handlers registered as object properties
+		}
+
+
+		function clickBtn(event){
+			if (event.target.id == 'btn1') {
+				alert(event.target.id);
+			} else {
+				cancelHandler(event);
+			}
+
+		}
+
+	</script>
+</html>

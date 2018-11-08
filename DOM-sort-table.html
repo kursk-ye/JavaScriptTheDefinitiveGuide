@@ -1,0 +1,94 @@
+<!DOCTYPE html>                 <!-- This is an HTML5 file -->
+<html>                          <!-- The root element -->
+	<head>                          <!-- Title, scripts & styles go here -->
+		<title>Digital Clock</title>
+	</head>
+	<body>
+		<table>
+			<tbody>
+				<tr>
+					<th>name</th>
+					<th>salary</th>
+					<th>job</th>
+				</tr>
+				<tr>
+					<td>zhang</td>
+					<td>1000</td>
+					<td>dever</td>
+				</tr>
+				<tr>
+					<td>kursk</td>
+					<td>20000</td>
+					<td>dever</td>
+				</tr>
+				<tr>
+					<td>ligang</td>
+					<td>500</td>
+					<td>manager</td>
+				</tr>
+			</tbody>
+		</table>
+
+
+		<script>
+			// Sort the rows in first <tbody> of the specified table according to
+			// the value of nth cell within each row. Use the comparator function
+			// if one is specified. Otherwise, compare the values alphabetically.
+			/*
+			* table 被排序的table object
+			* n 指定被排序的列
+			* comparator 用于比较的函数,如果不指定，按字符比较
+			*/
+			function sortrows(table, n, comparator) {
+				var tbody = table.tBodies[0]; // First <tbody>; may be implicitly created
+				var rows = tbody.getElementsByTagName("tr"); // All rows in the tbody
+				rows = Array.prototype.slice.call(rows,0);   // Snapshot in a true array
+				// Now sort the rows based on the text in the nth <td> element
+				rows.sort(function(row1,row2) {
+					var cell1 = row1.getElementsByTagName("td")[n];  // Get nth cell
+					var cell2 = row2.getElementsByTagName("td")[n];  // of both rows
+
+					if (!cell1) return -1; //first row is table head,should not to be sorted
+
+					var val1 = cell1.textContent || cell1.innerText; // Get text content
+					var val2 = cell2.textContent || cell2.innerText; // of the two cells
+					if (comparator) return comparator(val1, val2);   // Compare them!
+					if (val1 < val2) return -1;
+					else if (val1 > val2) return 1;
+						else return 0;
+						});
+						// Now append the rows into the tbody in their sorted order.
+						// This automatically moves them from their current location, so there
+						// is no need to remove them first. If the <tbody> contains any
+						// nodes other than <tr> elements, those nodes will float to the top.
+						for(var i = 0; i < rows.length; i++) tbody.appendChild(rows[i]);
+					}
+
+					// Find the <th> elements of the table (assuming there is only one row of them)
+					// and make them clickable so that clicking on a column header sorts
+					// by that column.
+					function makeSortable(table) {
+						var headers = table.getElementsByTagName("th");
+						for(var i = 0; i < headers.length; i++) {
+							(function(n) {  // Nested funtion to create a local scope
+								headers[i].onclick = function() { sortrows(table, n, comparator); };
+							}(i));          // Assign value of i to the local variable n
+						}
+					}
+
+					var comparator = function(val1, val2){
+						if ( parseInt(val1) < val2) return -1;
+						else if ( parseInt(val1) > val2) return 1;
+							else return 0;
+							};
+
+							var table = document.getElementsByTagName('table')[0];
+
+							makeSortable(table);
+
+						</script>
+					</body>
+				</html>
+
+
+

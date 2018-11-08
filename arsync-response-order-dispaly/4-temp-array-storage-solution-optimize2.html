@@ -1,0 +1,102 @@
+<!DOCTYPE html>                 <!-- This is an HTML5 file -->
+<html>                          <!-- The root element -->
+	<head>                          <!-- Title, scripts & styles go here -->
+		<title>Digital Clock</title>
+	</head>
+	<body>
+
+
+		<script type="text/javascript">
+			function xss_ajax(url, callback)
+			{
+				var script_id = null;
+				var script = document.createElement('script');
+				script.setAttribute('type', 'text/javascript');
+				script.setAttribute('src', url);
+				script.setAttribute('id', 'coolshell_script_id');
+
+				script.onload = script.onreadystatechange = function(){
+					if((!this.readyState || this.readyState === "loaded" || this.readyState === "complete")){
+						callback && callback();
+					}
+				};
+
+				script_id = document.getElementById('coolshell_script_id');
+				if(script_id){
+					document.getElementsByTagName('head')[0].removeChild(script_id);
+				}
+
+				// Insert <script> into DOM
+				document.getElementsByTagName('head')[0].appendChild(script);
+			}
+
+
+			function xss_rpc_call(n, callback)
+			{
+				var callbackName="xss_rpc_callback"  + Math.round(Math.random() * 10000);
+				var url = "http://coolshell.cn/t.php?n="+n+"&callback="+callbackName;
+				xss_ajax(url);
+
+				window[callbackName] = function(result){
+					var timeout = Math.round(Math.random() * 1000)
+					callback && setTimeout( function(){callback(result);}, timeout );
+					//callback && callback(result) ;
+				}
+			}
+
+			/*
+			 * 相对于3-temp-array-storage-solution-optimize1 方案，通过在每个callback函数上都调用显示结果之前
+			 * 判断response[]数组里的除undefined之外的值是否达接近total的值(这里判断二者之差是否小于2)
+			 * 如果是就调用显示结果的函数
+			 * 但这里处理结果仍然不理想，当total过大时(实测超过200时)，会不调用显示结果的函数
+			 */
+			 
+			var total = 180;
+			var start, end;
+
+			function array_asap_solution ()
+			{
+				var response = [total];
+				
+				for(var i=0; i < total; i++)
+				{
+					(function(x){
+						xss_rpc_call(x, function(res){
+								response[x] = res;
+								
+								if ( (total - response.filter(function(value) { return value !== undefined }).length) < 2  ) {
+									display(0);
+								} 
+							});
+						})(i);
+				}
+				
+				function display(i)	{
+					
+					if (i == total)	{
+						end = new Date().getTime();
+						console.log('exec escape time:' + (end - start));
+					}	else if (response[i])	{
+						
+						console.log(i + ',' + response[i]);
+						
+						display(i+1);
+					}
+				}
+
+				
+			}
+
+			start = new Date().getTime();
+			
+			array_asap_solution();
+			
+			
+
+		</script>
+
+	</body>
+</html>
+
+
+

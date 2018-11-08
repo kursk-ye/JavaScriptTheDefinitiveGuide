@@ -1,0 +1,78 @@
+<!DOCTYPE html>                 <!-- This is an HTML5 file -->
+<html>                          <!-- The root element -->
+	<head>                          <!-- Title, scripts & styles go here -->
+		<title>test</title>
+	</head>
+	<body>
+	<script src="set.js"></script>
+	<script type="text/javascript">
+	function extend(o, p){
+		for(var prop in p){
+			o[prop] = p[prop];
+		}
+		return o;
+	}
+
+	function inherit(p){
+		if (p==null) throw TypeError();
+			var t = typeof p;
+			if ( t !== "function" && t !== "object") throw TypeError();
+				if (Object.create) return Object.create(p);
+					function fn(){};
+					fn.prototype = p;
+					return new fn();
+	}
+
+	function defineSubClass(subclass, superclass, methods, statics){
+		subclass.prototype = inherit(superclass.prototype);
+		subclass.prototype.construct = subclass;
+		if (methods) extend(subclass.prototype, methods);
+		if (statics) extend(subclass, statics);
+		return subclass;
+	}
+
+	// We can also do this as a method of the superclass constructor
+	Function.prototype.extend = function(constructor, methods, statics) {
+	    return defineSubclass(this, constructor, methods, statics);
+	};
+
+	/*
+	 * A FilteredSet wraps a specified set object and applies a specified filter
+	 * to values passed to its add() method.  All of the other core set methods
+	 * simply forward to the wrapped set instance.
+	 */
+	var FilteredSet = Set.extend(
+	    function FilteredSet(set, filter) {  // The constructor
+	        this.set = set;
+	        this.filter = filter;
+	    },
+	    {  // The instance methods
+	        add: function() {
+	            // If we have a filter, apply it
+	            if (this.filter) {
+	                for(var i = 0; i < arguments.length; i++) {
+	                    var v = arguments[i];
+	                    if (!this.filter(v))
+	                        throw new Error("FilteredSet: value " + v +
+	                                        " rejected by filter");
+	                }
+	            }
+	            // Now forward the add() method to this.set.add()
+	            this.set.add.apply(this.set, arguments);
+	            return this;
+	        },
+	        // The rest of the methods just forward to this.set and do nothing else.
+	        remove: function() {
+	            this.set.remove.apply(this.set, arguments);
+	            return this;
+	        },
+	        contains: function(v) { return this.set.contains(v); },
+	        size: function() { return this.set.size(); },
+	        foreach: function(f,c) { this.set.foreach(f,c); }
+	    });
+
+
+	</script>
+
+	</body>
+</html>

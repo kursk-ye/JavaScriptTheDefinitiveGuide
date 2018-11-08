@@ -1,0 +1,38 @@
+function getScrollOffsets(w) {
+	// Use the specified window or the current window if no argument
+	w = w || window;
+	// This works for all browsers except IE versions 8 and before
+	if (w.pageXOffset != null) return {x: w.pageXOffset, y:w.pageYOffset};
+	// For IE (or any browser) in Standards mode
+	var d = w.document;
+	if (document.compatMode == "CSS1Compat")
+	return {x:d.documentElement.scrollLeft, y:d.documentElement.scrollTop};
+	// For browsers in Quirks mode
+	return { x: d.body.scrollLeft, y: d.body.scrollTop };
+}
+
+// Return the viewport size as w and h properties of an object
+function getViewportSize(w) {
+    // Use the specified window or the current window if no argument
+    w = w || window;  
+    // This works for all browsers except IE8 and before
+    if (w.innerWidth != null) return {w: w.innerWidth, h:w.innerHeight};
+    // For IE (or any browser) in Standards mode
+    var d = w.document;
+    if (document.compatMode == "CSS1Compat")
+        return { w: d.documentElement.clientWidth,
+                 h: d.documentElement.clientHeight };
+    // For browsers in Quirks mode
+    return { w: d.body.clientWidth, h: d.body.clientWidth };
+}
+
+//convert document coordinates to viewport corrdinates
+var box = e.getBoundingClientRect();  // Get position in viewport coordinates
+var offsets = getScrollOffsets();     // Utility function defined above
+var x = box.left + offsets.x;         // Convert to document coordinates
+var y = box.top + offsets.y;
+
+//get width and height
+var box = e.getBoundingClientRect();
+var w = box.width || (box.right - box.left);
+var h = box.height || (box.bottom - box.top);
